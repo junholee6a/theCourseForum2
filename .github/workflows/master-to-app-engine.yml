@@ -1,13 +1,13 @@
 # Based on https://github.com/actions/starter-workflows/blob/main/ci/django.yml
 name: Google App Engine Deployment
 
-on:
-  # CI must pass on the master branch
-  workflow_run:
-    workflows: ["Continuous Integration"]
-    branches: [master]
-    types:
-      - completed
+on: 
+  pull_request:
+    branches:
+      - '*'
+  # The following is needed to run tests upon direct push to dev or master
+  push:
+    branches: [dev, master]
 
 env:
   PYTHON_TARGET: 3.9
@@ -79,18 +79,3 @@ jobs:
         uses: google-github-actions/deploy-appengine@main
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-  discord:
-    if: ${{ always() }}
-    needs: [deploy]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Send a message to tCF Discord Server when deployment is finished
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_URL_CI }}
-          DEPLOY_RESULT: ${{ needs.deploy.result }}
-        run: |
-          bash ./scripts/notify-deployment-result.sh
-        shell: bash
